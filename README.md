@@ -1,93 +1,160 @@
-Trabalho prático desenvolvido para a disciplina de **Banco de Dados**.
-Desenvolvidos pelos alunos:
-Lilian Miranda Mendas GRR:20222549
-Mozart Gustavo da Cruz Dias GRR:20213396
 
-# fdtool - Ferramenta para Manipulação de Dependências Funcionais
+# fdtool – Ferramenta para Manipulação de Dependências Funcionais
 
-O `fdtool` é uma ferramenta de linha de comando desenvolvida em linguagem C (padrão C11) para análise e manipulação de Dependências Funcionais (DFs) sobre esquemas relacionais com atributos definidos no intervalo `A..Z`.
+## Trabalho Prático – Banco de Dados
 
----
+**Desenvolvido pelos alunos:**
 
-## Organização dos Arquivos e Arquitetura
-
-O projeto foi estruturado de forma modular, separando a representação dos dados, a leitura de arquivos e cada algoritmo exigido em unidades de compilação independentes:
-
-* **`types.h` / `types.c`**: Define a representação fundamental do sistema (`ConjuntoAtributo` como `uint32_t` via máscara de bits) e as estruturas `DF` e `Schema`. Contém as funções de conversão entre strings e bitmasks (`attr_bit`, `str_to_ConjuntoAtributo`, `ConjuntoAtributo_to_str`) e operações auxiliares de manipulação de bits.
-* **`lerarquivo.h` / `lerarquivo.c`**: Responsável pelo gerenciamento de memória dinâmica do vetor de dependências (`schema_init`, `schema_free`, `schema_add_df`) e pelo analisador sintático (`parse_fds_file`) que lê o arquivo `.fds`, ignora espaços em branco e extrai o universo $U$ e o conjunto $F$.
-* **`closure.h` / `closure.c`**: Implementa o algoritmo de ponto fixo para o cálculo do fecho de atributos $X^+$ (`compute_closure`) e sua variante `compute_closure_skip`, que permite calcular o fecho ignorando uma dependência específica do conjunto.
-* **`mincover.h` / `mincover.c`**: Implementa o cálculo da cobertura mínima (`compute_mincover`) em três etapas sequenciais: decomposição do lado direito (RHS) em atributos unitários, remoção de atributos estranhos no lado esquerdo (LHS) e eliminação de dependências funcionais redundantes.
-* **`keys.h` / `keys.c`**: Gerencia a lista dinâmica de chaves (`KeyList`) e implementa a busca por todas as chaves candidatas mínimas (`find_candidate_keys`), utilizando a extração de atributos obrigatórios (núcleo) e busca combinatória com poda por superconjunto.
-* **`normalform.h` / `normalform.c`**: Implementa a verificação das formas normais BCNF e 3FN (`check_normalform`), avaliando as dependências originais decompostas em RHS unitário com base nas superchaves e nos atributos primos obtidos pelas chaves candidatas.
-* **`main.c`**: Ponto de entrada da aplicação. Realiza o processamento dos argumentos de linha de comando (`closure`, `mincover`, `keys`, `normalform`), coordena a leitura do esquema e invoca o módulo correspondente.
-* **`Makefile`**: Automatiza a compilação com as flags exigidas (`-std=c11 -Wall -Wextra`) e gera o executável `fdtool`.
-* **`exemplos/`**: Diretório contendo arquivos de entrada no formato `.fds` utilizados para validação e testes.
+- Lilian Miranda Mendas – GRR: 20222549
+- Mozart Gustavo da Cruz Dias – GRR: 20213396
 
 ---
 
-## Lógica e Decisões de Implementação
+## 1. Apresentação do Projeto
 
-1. **Representação por Máscara de Bits (`uint32_t`)**: Como o domínio de atributos é limitado às 26 letras maiúsculas (`A..Z`), cada conjunto de atributos é armazenado em um inteiro sem sinal de 32 bits (`ConjuntoAtributo`), onde o bit $i$ corresponde à letra `'A' + i`. Operações de união (`|`), interseção (`&`), diferença (`& ~`) e verificação de subconjunto (`(A & B) == A`) são executadas em tempo constante $O(1)$, e a conversão para texto percorre os bits de 0 a 25, garantindo saída sempre ordenada alfabeticamente.
-2. **Reutilização do Fecho ($X^+$)**: O algoritmo de fecho (`closure.c`) atua como núcleo para os demais módulos: valida superchaves em `keys` e `normalform`, verifica atributos estranhos no LHS durante o Passo 2 de `mincover` e detecta dependências redundantes no Passo 3 de `mincover` por meio de `compute_closure_skip`.
-3. **Otimização na Busca de Chaves Candidatas**: Antes de testar combinações, o algoritmo identifica os atributos de $U$ que nunca ocorrem no lado direito de dependências não triviais, formando o núcleo obrigatório presente em toda chave. A busca ocorre por tamanho crescente de atributos opcionais com poda imediata sempre que um candidato contém uma chave já encontrada, assegurando a minimalidade sem gerar superchaves não mínimas.
+O **fdtool** é uma ferramenta de linha de comando desenvolvida em linguagem C, seguindo o padrão C11, para realizar operações relacionadas às Dependências Funcionais (DFs) em bancos de dados relacionais.
 
----
+A ferramenta permite analisar esquemas relacionais compostos por atributos representados pelas letras maiúsculas de A até Z.
 
-## Compilação
+Entre suas principais funcionalidades estão:
 
-Para compilar o projeto e gerar o executável `fdtool`, execute na raiz do diretório:
+- Cálculo do fecho de atributos;
+- Obtenção da cobertura mínima;
+- Identificação de chaves candidatas;
+- Verificação das formas normais BCNF e 3FN.
+
+O objetivo do projeto é implementar esses conceitos por meio de algoritmos que auxiliam na análise e na organização de estruturas de bancos de dados relacionais.
+
+## 2. Organização dos Arquivos
+
+O projeto foi dividido em diferentes arquivos, cada um responsável por uma parte específica do funcionamento da ferramenta. Essa organização facilita a compreensão, a manutenção e a reutilização do código.
+
+| Arquivo | Descrição |
+|---|---|
+| `types.h` / `types.c` | Definem as estruturas básicas do sistema, como conjuntos de atributos, dependências funcionais e esquemas relacionais. Também implementam operações de conversão e manipulação desses conjuntos. |
+| `lerarquivo.h` / `lerarquivo.c` | Responsáveis pela leitura e interpretação dos arquivos `.fds`, identificando o universo de atributos e as dependências funcionais. Também realizam o gerenciamento de memória. |
+| `closure.h` / `closure.c` | Implementam o algoritmo de cálculo do fecho de atributos (X+), identificando os atributos que podem ser determinados a partir de um conjunto inicial. |
+| `mincover.h` / `mincover.c` | Implementam o cálculo da cobertura mínima, realizando a decomposição do lado direito, a remoção de atributos desnecessários e a eliminação de dependências redundantes. |
+| `keys.h` / `keys.c` | Responsáveis pela identificação de todas as chaves candidatas mínimas do esquema relacional. |
+| `normalform.h` / `normalform.c` | Implementam a verificação das formas normais BCNF e 3FN, identificando possíveis violações das regras de normalização. |
+| `main.c` | Contém o ponto de entrada da aplicação, realiza a leitura dos argumentos informados pelo usuário e direciona a execução para a funcionalidade solicitada. |
+| `Makefile` | Automatiza o processo de compilação do projeto, utilizando as opções exigidas para o padrão C11. |
+| `exemplos/` | Contém arquivos de entrada no formato `.fds`, utilizados para executar testes e validar as funcionalidades da ferramenta. |
+
+## 3. Lógica e Decisões de Implementação
+
+### 3.1. Representação dos Conjuntos de Atributos
+
+Como o projeto trabalha com atributos representados pelas 26 letras maiúsculas do alfabeto (A até Z), foi utilizada uma máscara de bits (`uint32_t`) para armazenar os conjuntos de atributos.
+
+Nessa representação, cada bit corresponde a uma letra. Quando o bit está ativado, significa que o atributo correspondente pertence ao conjunto.
+
+Essa abordagem permite realizar operações como união, interseção, diferença e verificação de subconjuntos de maneira eficiente.
+
+Além disso, a conversão dos conjuntos para texto percorre os atributos em ordem alfabética, garantindo uma saída organizada.
+
+### 3.2. Reutilização do Algoritmo de Fecho
+
+O cálculo do fecho de atributos (X+) é uma das principais operações da ferramenta, pois também é utilizado por outros módulos do projeto.
+
+Sua implementação é aproveitada nas seguintes funcionalidades:
+
+- **Chaves candidatas:** verifica se um conjunto de atributos determina todos os atributos do esquema.
+- **Cobertura mínima:** auxilia na identificação de atributos desnecessários e dependências redundantes.
+- **Formas normais:** permite verificar se o lado esquerdo de uma dependência funcional representa uma superchave.
+
+Essa reutilização evita a repetição de algoritmos e mantém a implementação organizada.
+
+### 3.3. Busca por Chaves Candidatas
+
+Para encontrar as chaves candidatas, o programa identifica inicialmente os atributos que não aparecem no lado direito das dependências funcionais. Esses atributos são obrigatórios em todas as chaves candidatas.
+
+Depois dessa identificação, o algoritmo testa diferentes combinações de atributos, começando pelas menores.
+
+Quando uma combinação já contém uma chave candidata encontrada anteriormente, ela é descartada, pois não pode ser uma chave mínima.
+
+Esse processo reduz a quantidade de combinações analisadas e permite identificar todas as chaves candidatas mínimas do esquema.
+
+## 4. Compilação
+
+Para compilar o projeto, é necessário acessar o diretório raiz onde estão os arquivos do código-fonte e executar:
 
 ```bash
 make
 ```
 
-Para remover os arquivos objeto (`.o`) e o binário gerado:
+Esse comando utiliza as configurações definidas no `Makefile` e gera o executável `fdtool`.
+
+Para remover os arquivos objeto (`.o`) e o executável gerado, utilize:
 
 ```bash
 make clean
 ```
 
----
+## 5. Formato do Arquivo de Entrada
 
-## Formato do Arquivo de Entrada (`.fds`)
+A ferramenta utiliza arquivos com extensão `.fds` para representar os esquemas relacionais e suas dependências funcionais.
 
-Os arquivos de entrada devem definir o universo de atributos `U` e o conjunto de dependências funcionais `F`, separados por vírgula ou ponto e vírgula (espaços e quebras de linha são ignorados):
+O arquivo deve conter duas informações principais:
+
+- **U:** representa o universo de atributos do esquema relacional.
+- **F:** representa o conjunto de dependências funcionais.
+
+Exemplo de arquivo `.fds`:
 
 ```text
 U = {A, B, C, D, E}
 F = { A->BC, C->D, BD->E }
 ```
 
----
+Os atributos podem ser separados por vírgulas ou espaços. As dependências funcionais podem ser separadas por vírgulas ou ponto e vírgula, conforme o formato aceito pelo analisador de entrada.
 
-## Execução e Exemplos
+## 6. Execução da Ferramenta
 
-### 1. Fecho de Atributos (`closure`)
-Calcula e imprime $X^+$ em ordem alfabética:
+A ferramenta possui quatro funcionalidades principais, acessadas por meio de comandos no terminal.
+
+### 6.1. Fecho de Atributos (`closure`)
+
+Calcula o fecho de um conjunto de atributos, identificando todos os atributos que podem ser determinados a partir dele, considerando as dependências funcionais do esquema.
+
+**Exemplo 1:**
 
 ```bash
 ./fdtool closure --fds exemplos/e1.fds --X A
 ```
-Saída:
+
+Saída esperada:
+
 ```text
 ABCDE
 ```
 
+**Exemplo 2:**
+
 ```bash
 ./fdtool closure --fds exemplos/e1.fds --X BD
 ```
-Saída:
+
+Saída esperada:
+
 ```text
 BDE
 ```
 
-### 2. Cobertura Mínima (`mincover`)
-Calcula uma cobertura mínima equivalente com RHS unitário, uma dependência por linha:
+### 6.2. Cobertura Mínima (`mincover`)
+
+Calcula uma cobertura mínima equivalente ao conjunto original de dependências funcionais.
+
+O resultado apresenta uma dependência por linha, com apenas um atributo no lado direito.
+
+**Comando:**
 
 ```bash
 ./fdtool mincover --fds exemplos/e1.fds
 ```
-Saída:
+
+Saída esperada:
+
 ```text
 A->B
 A->C
@@ -95,27 +162,49 @@ C->D
 BD->E
 ```
 
-### 3. Chaves Candidatas (`keys`)
-Lista todas as chaves candidatas mínimas do esquema, uma por linha:
+### 6.3. Chaves Candidatas (`keys`)
+
+Identifica e apresenta todas as chaves candidatas mínimas do esquema relacional.
+
+Uma chave candidata é um conjunto mínimo de atributos capaz de determinar todos os atributos do esquema.
+
+**Comando:**
 
 ```bash
 ./fdtool keys --fds exemplos/e1.fds
 ```
-Saída:
+
+Saída esperada:
+
 ```text
 A
 ```
 
-### 4. Verificação de Formas Normais (`normalform`)
-Verifica a conformidade com BCNF e 3FN, detalhando eventuais violações:
+### 6.4. Verificação das Formas Normais (`normalform`)
+
+Verifica se o esquema relacional atende às regras das formas normais BCNF e Terceira Forma Normal (3FN).
+
+Caso existam violações, a ferramenta apresenta as dependências funcionais responsáveis e explica o motivo da violação.
+
+**Comando:**
 
 ```bash
 ./fdtool normalform --fds exemplos/e3.fds
 ```
-Saída:
+
+Saída esperada:
+
 ```text
 BCNF: VIOLATIONS
 3NF: VIOLATIONS
 VIOLATION BCNF: B->C (B not superkey)
 VIOLATION 3NF: B->C (C not prime, B not superkey)
 ```
+
+## 7. Considerações Finais
+
+O desenvolvimento do `fdtool` permitiu implementar e integrar diferentes operações relacionadas às dependências funcionais em bancos de dados relacionais.
+
+A divisão do projeto em módulos independentes facilitou a organização do código e a reutilização das implementações. Além disso, a ferramenta reúne funcionalidades importantes para a análise de esquemas relacionais, como cálculo de fechos, obtenção de coberturas mínimas, identificação de chaves candidatas e verificação das formas normais.
+
+Dessa forma, o projeto demonstra a aplicação prática dos conceitos estudados na disciplina de Banco de Dados, utilizando a linguagem C.
