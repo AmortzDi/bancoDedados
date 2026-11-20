@@ -1,7 +1,8 @@
 CC = gcc
-CFLAGS = -std=c11 -Wall -Wextra
+CFLAGS = -std=c11 -Wall -Wextra -O2
 TARGET = fdtool
-OBJS = main.o parser.o closure.o mincover.o keys.o normalform.o
+SRCS = main.c types.c lerarquivo.c closure.c mincover.c keys.c normalform.c
+OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)
 
