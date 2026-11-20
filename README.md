@@ -241,15 +241,18 @@ VIOLATION 3NF: B->C (C not prime, B not superkey)
 
 ## 7. Utilização de Inteligência Artificial
 
-Durante o desenvolvimento do trabalho, foi utilizada uma ferramenta de Inteligência Artificial como recurso de apoio em algumas etapas do projeto.
+Durante o desenvolvimento do projeto, foi utilizada uma ferramenta de Inteligência Artificial como recurso de apoio em diferentes etapas da implementação e da documentação.
 
-Sua utilização ocorreu principalmente em duas atividades:
+Sua utilização ocorreu principalmente nas seguintes atividades:
 
-- **Estruturação da documentação:** apoio na organização das seções, revisão da escrita e melhoria da apresentação do arquivo `README.md`, buscando tornar a documentação mais clara, objetiva e compreensível.
+- **Estruturação da documentação:** apoio na organização das seções, revisão da escrita e melhoria da apresentação do arquivo `README.md`, buscando tornar a documentação mais clara e compreensível.
 
-- **Desenvolvimento do módulo de leitura de arquivos:** apoio na organização e implementação do arquivo responsável pela leitura, interpretação e manipulação das informações presentes nos arquivos `.fds`, incluindo a identificação do universo de atributos e das dependências funcionais.
+- **Desenvolvimento do módulo de leitura de arquivos:** apoio na organização e implementação do módulo responsável pela leitura, interpretação e manipulação das informações presentes nos arquivos `.fds`, incluindo a identificação do universo de atributos e das dependências funcionais.
 
-A utilização da Inteligência Artificial teve caráter complementar, auxiliando no desenvolvimento e na organização do projeto. O foco do trabalho permaneceu na implementação e compreensão dos algoritmos de cálculo do fecho de atributos, cobertura mínima, identificação de chaves candidatas e verificação das formas normais BCNF e 3FN.
+- **Representação dos conjuntos de atributos com Bitmap:** apoio na análise e utilização de máscaras de bits (`uint32_t`) para representar os conjuntos de atributos. Essa abordagem permite realizar operações como união, interseção, diferença e verificação de subconjuntos por meio de operações bit a bit, tornando a manipulação dos atributos mais eficiente.
+
+A Inteligência Artificial foi utilizada como ferramenta complementar de apoio, enquanto o foco principal do trabalho permaneceu na implementação dos algoritmos de cálculo do fecho de atributos, cobertura mínima, identificação de chaves candidatas e verificação das formas normais BCNF e 3FN.
+
 
 ## 8. Considerações Finais
 
